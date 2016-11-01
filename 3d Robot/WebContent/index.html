@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<title>Alan Weide Lab 2</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+
+<!--  ************** Fragment Shader ************* -->
+<script id="shader-fs" type="x-shader/x-fragment">
+precision mediump float;
+varying vec4 vColor; 
+
+void main(void) {
+        gl_FragColor = vColor; 
+    }
+</script>
+
+<!--  ************** Vertex Shader ************* -->
+<script id="shader-vs" type="x-shader/x-vertex">
+
+    attribute vec3 aVertexPosition;
+    attribute vec4 aVertexColor;
+    varying vec4 vColor;
+
+    uniform mat4 uMVMatrix;
+
+    void main(void) {
+
+      gl_PointSize = 10.0; 
+      gl_Position = uMVMatrix*vec4(aVertexPosition, 1.0);
+
+      vColor = aVertexColor; 
+    }
+</script>
+
+
+<script type="text/javascript" src="shaders_setup.js"></script>
+<script type="text/javascript" src="robot-main.js"></script>
+
+
+</head>
+
+
+<body onload="webGLStart();">
+
+	<canvas id="canvas" style="border: none;" width="700" height="700"></canvas>
+
+	<table style="width:700px;">
+		<tr>
+			<td><button style="margin:auto; display:block" onclick="obj(L_HAND)">Left Hand</button></td>
+			<td><button style="margin:auto; display:block" onclick="obj(L_ARM)">Left Arm</button></td>
+			<td><button style="margin:auto; display:block" onclick="obj(BODY)">Body</button></td>
+			<td><button style="margin:auto; display:block" onclick="obj(R_ARM)">Right Arm</button></td>
+			<td><button style="margin:auto; display:block" onclick="obj(R_HAND)">Right hand</button></td>
+		</tr>
+		<tr>
+			<td />
+			<td><button style="margin:auto; display:block" onClick="obj(L_LEG)">Left Leg</button></td>
+			<td />
+			<td><button style="margin:auto; display:block" onClick="obj(R_LEG)">Right Leg</button></td>
+			<td />
+		</tr>
+	</table>
+	<h4>
+		The robot's hands depend on its arms, which depend on its body. Its legs depend on its body.
+		<br><br>
+		Click on the left mouse button and move the cursor to rotate.<br>
+		Use the f, b, l, and r keys to move the robot forward, backward, left, and right, respectively.
+	</h4>
+	<button onclick="redraw()">Reset Everything</button>
+	</div>
+
+	<footer>
+		<center>
+			<p>&copy; Alan Weide 2016</p>
+			<p>Modified from WebGL example: Han-Wei Shen, Ohio State
+				University, 2016</p>
+		</center>
+	</footer>
+
+</body>
+
+
+</html>
+
+
