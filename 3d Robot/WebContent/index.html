@@ -4,7 +4,7 @@
 <html>
 
 <head>
-<title>Alan Weide Lab 2</title>
+<title>Alan Weide Lab 3</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
@@ -26,15 +26,18 @@ void main(void) {
     attribute vec4 aVertexColor;
     varying vec4 vColor;
 
-    uniform mat4 uMVMatrix;
+    uniform mat4 uMMatrix; 
+    uniform mat4 uVMatrix;
+    uniform mat4 uPMatrix; 
+
 
     void main(void) {
+     gl_PointSize = 5.0;
+     gl_Position = uPMatrix* uVMatrix*uMMatrix*vec4(aVertexPosition, 1.0);
 
-      gl_PointSize = 10.0; 
-      gl_Position = uMVMatrix*vec4(aVertexPosition, 1.0);
+     vColor = aVertexColor; 
+   }
 
-      vColor = aVertexColor; 
-    }
 </script>
 
 
@@ -49,27 +52,58 @@ void main(void) {
 
 	<canvas id="canvas" style="border: none;" width="700" height="700"></canvas>
 
-	<table style="width:700px;">
+	<h4>Camera Control</h4>
+	<table style="width: 700px;">
 		<tr>
-			<td><button style="margin:auto; display:block" onclick="obj(L_HAND)">Left Hand</button></td>
-			<td><button style="margin:auto; display:block" onclick="obj(L_ARM)">Left Arm</button></td>
-			<td><button style="margin:auto; display:block" onclick="obj(BODY)">Body</button></td>
-			<td><button style="margin:auto; display:block" onclick="obj(R_ARM)">Right Arm</button></td>
-			<td><button style="margin:auto; display:block" onclick="obj(R_HAND)">Right hand</button></td>
+			<th colspan="3"><h5>Camera Position</h5></th>
+			<td width="50px"/>
+			<th colspan="3"><h5>Camera Position</h5></th>
 		</tr>
 		<tr>
 			<td />
-			<td><button style="margin:auto; display:block" onClick="obj(L_LEG)">Left Leg</button></td>
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Up</button></td>
 			<td />
-			<td><button style="margin:auto; display:block" onClick="obj(R_LEG)">Right Leg</button></td>
 			<td />
+			<td />
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Up</button></td>
+			<td />
+		</tr>
+		<tr>
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Left</button></td>
+			<td />
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Right</button></td>
+			<td />
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Left</button></td>
+			<td />
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Right</button></td>
+		</tr>
+		<tr>
+			<td />
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Down</button></td>
+			<td />
+			<td />
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Roll Left</button></td>
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Down</button></td>
+			<td><button style="margin: auto; display: block"
+					onclick="//something">Roll Right</button></td>
 		</tr>
 	</table>
+
 	<h4>
-		The robot's hands depend on its arms, which depend on its body. Its legs depend on its body.
-		<br><br>
-		Click on the left mouse button and move the cursor to rotate.<br>
-		Use the f, b, l, and r keys to move the robot forward, backward, left, and right, respectively.
+		The robot's hands depend on its arms, which depend on its body. Its
+		legs depend on its body. <br>
+		<br> Click on the left mouse button and move the cursor to
+		rotate.<br> Use the f, b, l, and r keys to move the robot
+		forward, backward, left, and right, respectively.
 	</h4>
 	<button onclick="redraw()">Reset Everything</button>
 	</div>
