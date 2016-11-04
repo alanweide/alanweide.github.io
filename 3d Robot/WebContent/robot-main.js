@@ -19,7 +19,6 @@ function initGL(canvas) {
 // /////////////////////////////////////////////////////////////
 
 var circlePoints = 24;
-var vertSlices = 12;
 var robColor = [];
 
 // /////////////////////////////////////////////////////////
@@ -115,8 +114,8 @@ function initBuffers() {
 
 	var sphereVertices = [];
 
-	for (var i = 0; i <= vertSlices; i++) {
-		var zenith = (i - (vertSlices / 2)) * degToRad(90 / (vertSlices / 2));
+	for (var i = 0; i <= circlePoints / 2; i++) {
+		var zenith = (i - (circlePoints / 4)) * degToRad(90 / (circlePoints / 4));
 		for (var j = 0; j < circlePoints; j++) {
 			var angle = j * degToRad(360 / circlePoints);
 			var r = Math.cos(zenith);
@@ -129,13 +128,13 @@ function initBuffers() {
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphereVertices),
 			gl.STATIC_DRAW);
 	sphereVertexPositionBuffer.itemSize = 3;
-	sphereVertexPositionBuffer.numItems = (vertSlices + 1) * circlePoints;
+	sphereVertexPositionBuffer.numItems = ((circlePoints / 2) + 1) * circlePoints;
 
 	sphereVertexIndexBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphereVertexIndexBuffer);
 
 	var sphereIdx = [];
-	for (var i = 0; i < vertSlices; i++) {
+	for (var i = 0; i < circlePoints / 2; i++) {
 		for (var j = 0; j < circlePoints; j++) {
 			var lIdx = j + i * circlePoints;
 			sphereIdx.push(lIdx, (i * cp) + (lIdx + 1) % cp, lIdx + cp);
@@ -148,7 +147,7 @@ function initBuffers() {
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sphereIdx),
 			gl.STATIC_DRAW);
 	sphereVertexIndexBuffer.itemSize = 1;
-	sphereVertexIndexBuffer.numItems = vertSlices * circlePoints * 6;
+	sphereVertexIndexBuffer.numItems = circlePoints * circlePoints * 3;
 
 	// -------- End Sphere --------
 	
@@ -201,7 +200,7 @@ function initBuffers() {
 	
 	var sphereColors = [];
 	
-	for (var i = 0; i <= vertSlices; i++) {
+	for (var i = 0; i <= circlePoints / 2; i++) {
 		var layerColor = Math.min(0.8, Math.max(0.2, i / (circlePoints / 2)));
 		for (var j = 0; j < circlePoints; j++) {
 //			sphereColors.push(layerColor, layerColor, layerColor, 1);
@@ -220,6 +219,11 @@ function initBuffers() {
 
 var mvMatrices = [];
 var sceneMatrix = mat4.create(); // scene rotation matrix
+
+var camLoc = [0, 0.6, 2]; // camera location
+var lookLoc = [ 0, 0, 0 ]; // camera lookAt center
+var upVector = [ 0, 1, 0 ]; // camera up vector
+
 var mMatrix = mat4.create(); // model matrix
 var vMatrix = mat4.create(); // view matrix
 var pMatrix = mat4.create(); // projection matrix
@@ -360,22 +364,10 @@ function draw_sphere(matrix) {
 
 function draw_extras(matrix) {
 	PushMatrix(matrix);
-	matrix = mat4.translate(matrix, [ 0, -2.25, 0 ]);
-	matrix = mat4.scale(matrix, [ 5, 1, 1 ]);
+	matrix = mat4.translate(matrix, [ 0, -2, -1.2 ]);
+	matrix = mat4.scale(matrix, [ 5, 0.5, 5 ]);
 	// draw_color_cube(matrix, [ 0.4, 0.0, 0.0, 1.0 ]);
 	draw_cube(matrix);
-
-	matrix = PopMatrix();
-	PushMatrix(matrix);
-
-	// matrix = mat4.scale(matrix, [ 0.2, 1, 1 ]);
-	// matrix = mat4.translate(matrix, [ 0, 4.5, 0 ]);
-	matrix = mat4.translate(matrix, [ 0, 2.25, 0 ]);
-	matrix = mat4.scale(matrix, [ 5, 1, 1 ]);
-	// draw_color_cube(matrix, [ 0.4, 0.0, 0.0, 1.0 ]);
-	draw_cube(matrix);
-	// matrix = mat4.scale(matrix, [ 0.2, 1, 1 ]);
-	// matrix = mat4.translate(matrix, [ 0, -2.25, 0 ]);
 	return PopMatrix();
 }
 
@@ -430,8 +422,8 @@ function drawScene() {
 
 	pMatrix = mat4.perspective(60, 1.0, 0.05, 100, pMatrix); // set up the
 	// projection matrix
-
-	vMatrix = mat4.lookAt([ 0, 0.6, 2 ], [ 0, 0, 0 ], [ 0, 1, 0 ], vMatrix); // set
+	
+	vMatrix = mat4.lookAt(camLoc, lookLoc, upVector, vMatrix); // set
 	// up
 	// the
 	// view
@@ -500,7 +492,7 @@ function drawScene() {
 // /////////////////////////////////////////////////////////////
 
 var lastMouseX = 0, lastMouseY = 0;
-var BODY = 0, L_ARM = 1, L_HAND = 2, R_ARM = 3, R_HAND = 4, L_LEG = 5, R_LEG = 6;
+var SCENE = -1, BODY = 0, L_ARM = 1, L_HAND = 2, R_ARM = 3, R_HAND = 4, L_LEG = 5, R_LEG = 6;
 
 // /////////////////////////////////////////////////////////////
 
@@ -523,21 +515,26 @@ function onDocumentMouseMove(event) {
 
 	var diffX = mouseX - lastMouseX;
 	var diffY = mouseY - lastMouseY;
+	var absDiff = Math.sqrt(diffX*diffX + diffY*diffY);
+	if (diffX < 0) {
+		absDiff *= -1;
+	}
 
 	// console.log("rotate" + degToRad(diffX / 5.0));
-//	mvMatrices[which_object] = mat4.rotate(mvMatrices[which_object],
-//			degToRad(diffX / 5.0), [ 0, 0, 1 ]);
-	
 	var LEFT_MOUSE = 1;
-	var RIGHT_MOUSE = 3;
+	var RIGHT_MOUSE = 0;
 	
-	switch(event.which) {
-	case LEFT_MOUSE:
-		sceneMatrix = mat4.rotate(sceneMatrix, degToRad(diffX/5.0), [0, 1, 0]);
-		break;
-	case RIGHT_MOUSE:
-		sceneMatrix = mat4.scale(sceneMatrix, diffX/5.0, diffX/5.0, diffX/5.0);
-		break;
+	var SCALE = 500.0;
+	
+	if (event.which == LEFT_MOUSE) {
+		if (which_object != SCENE) {
+			mvMatrices[which_object] = mat4.rotate(mvMatrices[which_object],
+					degToRad(diffX / 5.0), [ 0, 0, 1 ]);
+		} else {
+			sceneMatrix = mat4.rotate(sceneMatrix, degToRad(diffX/5.0), [0, 1, 0]);
+		}		
+	} else {
+		sceneMatrix = mat4.scale(sceneMatrix, [1 + absDiff/SCALE, 1 + absDiff/SCALE, 1 + absDiff/SCALE]);
 	}
 	
 	lastMouseX = mouseX;
@@ -565,23 +562,31 @@ function onKeyDown(event) {
 		dist /= 3;
 	}
 
-	// console.log(event.keyCode);
+	 console.log(event.keyCode);
 	switch (event.keyCode) {
 	case 82:
 		// console.log('enter r');
-		mvMatrices[0] = mat4.translate(mvMatrices[0], [ dist, 0, 0 ]);
+		mvMatrices[BODY] = mat4.translate(mvMatrices[BODY], [ dist, 0, 0 ]);
 		break;
 	case 76:
 		// console.log('enter l');
-		mvMatrices[0] = mat4.translate(mvMatrices[0], [ -dist, 0, 0 ]);
+		mvMatrices[BODY] = mat4.translate(mvMatrices[BODY], [ -dist, 0, 0 ]);
 		break;
 	case 70:
 		// console.log('enter f');
-		mvMatrices[0] = mat4.translate(mvMatrices[0], [ 0.0, dist, 0 ]);
+		mvMatrices[BODY] = mat4.translate(mvMatrices[BODY], [ 0, 0, -dist ]);
 		break;
 	case 66:
 		// console.log('enter b');
-		mvMatrices[0] = mat4.translate(mvMatrices[0], [ 0.0, -dist, 0 ]);
+		mvMatrices[BODY] = mat4.translate(mvMatrices[BODY], [ 0, 0, dist ]);
+		break;
+	case 68:
+		// console.log('enter d');
+		mvMatrices[BODY] = mat4.translate(mvMatrices[BODY], [0, -dist, 0]);
+		break;
+	case 85:
+		// console.log('enter u');
+		mvMatrices[BODY] = mat4.translate(mvMatrices[BODY], [0, dist, 0]);
 		break;
 	case 67:
 		robColor = [ Math.random(), Math.random(), Math.random(), 1.0 ];
@@ -589,6 +594,64 @@ function onKeyDown(event) {
 	}
 	drawScene();
 }
+
+var camDist = 0.1;
+var angleFromVertical = 0.0;
+
+function cameraUp() {
+	camLoc[1] += camDist;
+	drawScene();
+}
+
+function cameraLeft() {
+	camLoc[0] -= camDist;
+	drawScene();
+}
+
+function cameraRight() {
+	camLoc[0] += camDist;
+	drawScene();
+}
+
+function cameraDown() {
+	camLoc[1] -= camDist;
+	drawScene();
+}
+
+function lookUp() {
+	lookLoc[1] += camDist;
+	drawScene();
+}
+
+function lookLeft() {
+	lookLoc[0] -= camDist;
+	drawScene();
+}
+
+function lookRight() {
+	lookLoc[0] += camDist;
+	drawScene();
+}
+
+function lookDown() {
+	lookLoc[1] -= camDist;
+	drawScene();
+}
+
+function rollLeft() {
+	angleFromVertical += camDist;
+	upVector[0] = Math.cos(Math.PI / 2 + angleFromVertical);
+	upVector[1] = Math.sin(Math.PI / 2 + angleFromVertical);
+	drawScene();
+}
+
+function rollRight() {
+	angleFromVertical -= camDist;
+	upVector[0] = Math.cos(Math.PI / 2 + angleFromVertical);
+	upVector[1] = Math.sin(Math.PI / 2 + angleFromVertical);
+	drawScene();
+}
+
 // /////////////////////////////////////////////////////////////
 
 function webGLStart() {
@@ -642,7 +705,7 @@ function webGLStart() {
 	// mvMatrix5 = mat4.create();
 	// mat4.identity(mvMatrix5);
 
-	obj(BODY);
+	obj(SCENE);
 
 	drawScene();
 }
