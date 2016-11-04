@@ -220,8 +220,8 @@ function initBuffers() {
 var mvMatrices = [];
 var sceneMatrix = mat4.create(); // scene rotation matrix
 
-var camLoc = [0, 0.6, 2]; // camera location
-var lookLoc = [ 0, 0, 0 ]; // camera lookAt center
+var camLoc = [0, 0.1, 2]; // camera location
+var lookLoc = [ 0, 0.1, 0 ]; // camera lookAt center
 var upVector = [ 0, 1, 0 ]; // camera up vector
 
 var mMatrix = mat4.create(); // model matrix
@@ -364,7 +364,7 @@ function draw_sphere(matrix) {
 
 function draw_extras(matrix) {
 	PushMatrix(matrix);
-	matrix = mat4.translate(matrix, [ 0, -2, -1.2 ]);
+	matrix = mat4.translate(matrix, [ 0, -2, -2 ]);
 	matrix = mat4.scale(matrix, [ 5, 0.5, 5 ]);
 	// draw_color_cube(matrix, [ 0.4, 0.0, 0.0, 1.0 ]);
 	draw_cube(matrix);
@@ -600,21 +600,25 @@ var angleFromVertical = 0.0;
 
 function cameraUp() {
 	camLoc[1] += camDist;
+	lookLoc[1] += camDist;
 	drawScene();
 }
 
 function cameraLeft() {
 	camLoc[0] -= camDist;
+	lookLoc[0] -= camDist;
 	drawScene();
 }
 
 function cameraRight() {
 	camLoc[0] += camDist;
+	lookLoc[0] += camDist;
 	drawScene();
 }
 
 function cameraDown() {
 	camLoc[1] -= camDist;
+	lookLoc[1] -= camDist;
 	drawScene();
 }
 
